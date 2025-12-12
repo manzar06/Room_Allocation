@@ -23,6 +23,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False)  # 'student' or 'admin'
+    gender = db.Column(db.String(10), nullable=True)  # 'male' or 'female'
     full_name = db.Column(db.String(100), nullable=False)
     student_id = db.Column(db.String(50), unique=True, nullable=True)
     phone = db.Column(db.String(20), nullable=True)
@@ -123,6 +124,7 @@ def register():
         student_id = request.form.get('student_id')
         phone = request.form.get('phone')
         role = request.form.get('role', 'student')
+        gender = request.form.get('gender')
         
         if User.query.filter_by(username=username).first():
             flash('Username already exists', 'error')
@@ -143,7 +145,8 @@ def register():
             full_name=full_name,
             student_id=student_id,
             phone=phone,
-            role=role
+            role=role,
+            gender=gender
         )
         
         db.session.add(user)
@@ -221,7 +224,7 @@ def apply_for_room():
         flash('Application submitted successfully!', 'success')
         return redirect(url_for('student_dashboard'))
     
-    blocks = Block.query.all()
+    blocks = Block.query.filter_by(gender=current_user.gender).all()
     return render_template('student/apply.html', blocks=blocks)
 
 @app.route('/student/rooms')
@@ -231,7 +234,7 @@ def view_rooms():
         flash('Access denied', 'error')
         return redirect(url_for('index'))
     
-    blocks = Block.query.all()
+    blocks = Block.query.filter_by(gender=current_user.gender).all()
     rooms_data = []
     for block in blocks:
         rooms = Room.query.filter_by(block_id=block.id).all()
@@ -352,7 +355,7 @@ def manage_applications():
         return redirect(url_for('index'))
     
     applications = Application.query.order_by(Application.applied_at.desc()).all()
-    available_rooms = Room.query.filter(Room.current_occupancy < Room.capacity).all()
+    available_rooms = Room.query.join(Block).filter(Room.current_occupancy < Room.capacity).all()
     return render_template('admin/applications.html', applications=applications, available_rooms=available_rooms)
 
 @app.route('/admin/application/<int:app_id>/approve', methods=['POST'])
@@ -368,7 +371,16 @@ def approve_application(app_id):
         flash('Please select a room', 'error')
         return redirect(url_for('manage_applications'))
     
+    # Prevent duplicate allocation for the same student
+    existing_allocation = Allocation.query.filter_by(student_id=application.student_id, status='active').first()
+    if existing_allocation:
+        flash('Student already has an active allocation', 'error')
+        return redirect(url_for('manage_applications'))
+    
     room = Room.query.get(room_id)
+    if room.block.gender and application.student.gender and room.block.gender != application.student.gender:
+        flash('Room gender does not match student gender', 'error')
+        return redirect(url_for('manage_applications'))
     if room.current_occupancy >= room.capacity:
         flash('Room is full', 'error')
         return redirect(url_for('manage_applications'))
