@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Fees - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>Manage Fees</h2>
+
+<div class="form-container">
+    <h3>Create New Fee</h3>
+    <form method="POST" action="{{ url_for('manage_fees') }}">
+        <div class="form-group">
+            <label for="student_id">Student</label>
+            <select id="student_id" name="student_id" required>
+                <option value="">Select student</option>
+                {% for student in students %}
+                <option value="{{ student.id }}">{{ student.full_name }} ({{ student.student_id }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="fee_type">Fee Type</label>
+            <select id="fee_type" name="fee_type" required>
+                <option value="">Select type</option>
+                <option value="hostel_fee">Hostel Fee</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="security">Security Deposit</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="amount">Amount (₹)</label>
+            <input type="number" id="amount" name="amount" step="0.01" min="0" required>
+        </div>
+        <div class="form-group">
+            <label for="due_date">Due Date</label>
+            <input type="date" id="due_date" name="due_date" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Fee</button>
+    </form>
+</div>
+
+<h3>All Fees</h3>
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Fee Type</th>
+                <th>Amount</th>
+                <th>Due Date</th>
+                <th>Paid Date</th>
+                <th>Status</th>
+                <th>Receipt</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fee in fees %}
+            <tr>
+                <td>{{ fee.student.full_name }}</td>
+                <td>{{ fee.fee_type|title }}</td>
+                <td>₹{{ fee.amount }}</td>
+                <td>{{ fee.due_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ fee.paid_date.strftime('%Y-%m-%d') if fee.paid_date else 'N/A' }}</td>
+                <td><span class="status-{{ fee.status }}">{{ fee.status|title }}</span></td>
+                <td>{{ fee.receipt_number or 'N/A' }}</td>
+                <td>
+                    {% if fee.status == 'pending' %}
+                    <button onclick="openMarkPaidModal({{ fee.id }})" class="btn btn-sm btn-success">Mark Paid</button>
+                    {% else %}
+                    <span>Paid</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Mark Paid Modal -->
+<div id="markPaidModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('markPaidModal')">&times;</span>
+        <h3>Mark Fee as Paid</h3>
+        <form method="POST" id="markPaidForm">
+            <div class="form-group">
+                <label for="receipt_number">Receipt Number</label>
+                <input type="text" id="receipt_number" name="receipt_number" required>
+            </div>
+            <div class="form-group">
+                <label for="payment_method">Payment Method</label>
+                <select id="payment_method" name="payment_method">
+                    <option value="cash">Cash</option>
+                    <option value="online">Online</option>
+                    <option value="cheque">Cheque</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Mark as Paid</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openMarkPaidModal(feeId) {
+    document.getElementById('markPaidForm').action = '/admin/fee/' + feeId + '/mark_paid';
+    document.getElementById('markPaidModal').style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
+

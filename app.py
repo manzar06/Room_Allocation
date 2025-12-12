@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 app = Flask(__name__)
@@ -381,6 +381,10 @@ def approve_application(app_id):
     if room.block.gender and application.student.gender and room.block.gender != application.student.gender:
         flash('Room gender does not match student gender', 'error')
         return redirect(url_for('manage_applications'))
+    if application.preferred_room_type and room.room_type:
+        if application.preferred_room_type.lower() != room.room_type.lower():
+            flash('Room type does not match student preference', 'error')
+            return redirect(url_for('manage_applications'))
     if room.current_occupancy >= room.capacity:
         flash('Room is full', 'error')
         return redirect(url_for('manage_applications'))
@@ -403,8 +407,17 @@ def approve_application(app_id):
     application.reviewed_at = datetime.utcnow()
     application.admin_notes = request.form.get('notes', '')
     
+    # Auto-generate hostel fee when room is allocated
+    fee = Fee(
+        student_id=application.student_id,
+        amount=room.price if room.price else 5000,  # Use room price or default
+        fee_type='hostel_fee',
+        due_date=datetime.utcnow() + timedelta(days=30)  # Due in 30 days
+    )
+    db.session.add(fee)
+    
     db.session.commit()
-    flash('Application approved and room allocated!', 'success')
+    flash('Application approved and room allocated! Hostel fee generated.', 'success')
     return redirect(url_for('manage_applications'))
 
 @app.route('/admin/application/<int:app_id>/reject', methods=['POST'])
@@ -478,6 +491,53 @@ def reports():
                          total_rooms=total_rooms,
                          occupied_rooms=occupied_rooms,
                          available_rooms=available_rooms)
+
+@app.route('/admin/fees', methods=['GET', 'POST'])
+@login_required
+def manage_fees():
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        student_id = request.form.get('student_id')
+        amount = float(request.form.get('amount'))
+        fee_type = request.form.get('fee_type')
+        due_date_str = request.form.get('due_date')
+        
+        due_date = datetime.strptime(due_date_str, '%Y-%m-%d')
+        
+        fee = Fee(
+            student_id=student_id,
+            amount=amount,
+            fee_type=fee_type,
+            due_date=due_date
+        )
+        db.session.add(fee)
+        db.session.commit()
+        flash('Fee created successfully!', 'success')
+        return redirect(url_for('manage_fees'))
+    
+    fees = Fee.query.order_by(Fee.due_date.desc()).all()
+    students = User.query.filter_by(role='student').all()
+    return render_template('admin/fees.html', fees=fees, students=students)
+
+@app.route('/admin/fee/<int:fee_id>/mark_paid', methods=['POST'])
+@login_required
+def mark_fee_paid(fee_id):
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    fee = Fee.query.get_or_404(fee_id)
+    fee.status = 'paid'
+    fee.paid_date = datetime.utcnow()
+    fee.receipt_number = request.form.get('receipt_number')
+    fee.payment_method = request.form.get('payment_method', 'cash')
+    
+    db.session.commit()
+    flash('Fee marked as paid!', 'success')
+    return redirect(url_for('manage_fees'))
 
 if __name__ == '__main__':
     with app.app_context():
