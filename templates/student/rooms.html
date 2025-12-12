@@ -3,7 +3,7 @@
 {% block title %}Available Rooms - Smart Hostel System{% endblock %}
 
 {% block content %}
-<h2>Available Rooms</h2>
+<h2><i class="fas fa-door-open"></i> Available Rooms</h2>
 {% for room_group in rooms_data %}
 <div class="block-section">
     <h3>{{ room_group.block.name }} ({{ room_group.block.gender }})</h3>
@@ -16,7 +16,7 @@
             <p><strong>Occupancy:</strong> {{ room.current_occupancy }}/{{ room.capacity }}</p>
             <p><strong>Status:</strong> <span class="status-{{ room.status }}">{{ room.status|title }}</span></p>
             {% if room.price %}
-            <p><strong>Price:</strong> ₹{{ room.price }}/month</p>
+            <p><strong>Price:</strong> Rs{{ room.price }}/month</p>
             {% endif %}
         </div>
         {% endfor %}

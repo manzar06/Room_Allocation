@@ -4,36 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Smart Hostel Room Allocation System{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>🏠 Smart Hostel System</h1>
+                <h1><i class="fas fa-building"></i> Smart Hostel System</h1>
             </div>
             <ul class="nav-menu">
                 {% if current_user.is_authenticated %}
                     {% if current_user.role == 'admin' %}
-                        <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
-                        <li><a href="{{ url_for('manage_applications') }}">Applications</a></li>
-                        <li><a href="{{ url_for('view_allocations') }}">Allocations</a></li>
-                        <li><a href="{{ url_for('manage_blocks') }}">Blocks</a></li>
-                        <li><a href="{{ url_for('manage_rooms') }}">Rooms</a></li>
-                        <li><a href="{{ url_for('manage_fees') }}">Fees</a></li>
-                        <li><a href="{{ url_for('admin_complaints') }}">Complaints</a></li>
-                        <li><a href="{{ url_for('reports') }}">Reports</a></li>
+                        <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="{{ url_for('manage_applications') }}"><i class="fas fa-file-alt"></i> Applications</a></li>
+                        <li><a href="{{ url_for('view_allocations') }}"><i class="fas fa-key"></i> Allocations</a></li>
+                        <li><a href="{{ url_for('manage_blocks') }}"><i class="fas fa-building"></i> Blocks</a></li>
+                        <li><a href="{{ url_for('manage_rooms') }}"><i class="fas fa-door-open"></i> Rooms</a></li>
+                        <li><a href="{{ url_for('manage_fees') }}"><i class="fas fa-money-bill-wave"></i> Fees</a></li>
+                        <li><a href="{{ url_for('admin_complaints') }}"><i class="fas fa-exclamation-circle"></i> Complaints</a></li>
+                        <li><a href="{{ url_for('reports') }}"><i class="fas fa-chart-bar"></i> Reports</a></li>
                     {% else %}
-                        <li><a href="{{ url_for('student_dashboard') }}">Dashboard</a></li>
-                        <li><a href="{{ url_for('view_rooms') }}">View Rooms</a></li>
-                        <li><a href="{{ url_for('complaints') }}">Complaints</a></li>
-                        <li><a href="{{ url_for('student_fees') }}">Fees</a></li>
+                        <li><a href="{{ url_for('student_dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="{{ url_for('view_rooms') }}"><i class="fas fa-door-open"></i> View Rooms</a></li>
+                        <li><a href="{{ url_for('complaints') }}"><i class="fas fa-exclamation-circle"></i> Complaints</a></li>
+                        <li><a href="{{ url_for('student_fees') }}"><i class="fas fa-money-bill-wave"></i> Fees</a></li>
                     {% endif %}
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
-                    <li class="user-info">👤 {{ current_user.full_name }}</li>
+                    <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    <li class="user-info"><i class="fas fa-user"></i> {{ current_user.full_name }}</li>
                 {% else %}
-                    <li><a href="{{ url_for('login') }}">Login</a></li>
-                    <li><a href="{{ url_for('register') }}">Register</a></li>
+                    <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                    <li><a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Register</a></li>
                 {% endif %}
             </ul>
         </div>

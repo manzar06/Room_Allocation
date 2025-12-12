@@ -8,7 +8,7 @@
 
 <div class="dashboard-grid">
     <div class="dashboard-card">
-        <h3>Application Status</h3>
+        <h3><i class="fas fa-file-alt"></i> Application Status</h3>
         {% if application %}
             <p><strong>Status:</strong> <span class="status-{{ application.status }}">{{ application.status|title }}</span></p>
             <p><strong>Applied:</strong> {{ application.applied_at.strftime('%Y-%m-%d') }}</p>
@@ -17,12 +17,12 @@
             {% endif %}
         {% else %}
             <p>No application submitted yet.</p>
-            <a href="{{ url_for('apply_for_room') }}" class="btn btn-primary">Apply for Room</a>
+            <a href="{{ url_for('apply_for_room') }}" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Apply for Room</a>
         {% endif %}
     </div>
 
     <div class="dashboard-card">
-        <h3>Room Allocation</h3>
+        <h3><i class="fas fa-key"></i> Room Allocation</h3>
         {% if allocation %}
             {% if allocation.status == 'checked_out' %}
                 <div class="alert alert-info">
@@ -46,7 +46,7 @@
     </div>
 
     <div class="dashboard-card">
-        <h3>Recent Complaints</h3>
+        <h3><i class="fas fa-exclamation-circle"></i> Recent Complaints</h3>
         {% if complaints %}
             <ul class="complaint-list">
                 {% for complaint in complaints %}
@@ -63,11 +63,11 @@
     </div>
 
     <div class="dashboard-card">
-        <h3>Pending Fees</h3>
+        <h3><i class="fas fa-money-bill-wave"></i> Pending Fees</h3>
         {% if pending_fees %}
             <ul>
                 {% for fee in pending_fees %}
-                <li>{{ fee.fee_type|title }}: ₹{{ fee.amount }} (Due: {{ fee.due_date.strftime('%Y-%m-%d') }})</li>
+                <li>{{ fee.fee_type|title }}: Rs{{ fee.amount }} (Due: {{ fee.due_date.strftime('%Y-%m-%d') }})</li>
                 {% endfor %}
             </ul>
         {% else %}
@@ -78,9 +78,9 @@
 </div>
 
 <div class="quick-actions">
-    <a href="{{ url_for('apply_for_room') }}" class="btn btn-primary">Apply for Room</a>
-    <a href="{{ url_for('view_rooms') }}" class="btn btn-secondary">View Available Rooms</a>
-    <a href="{{ url_for('complaints') }}" class="btn btn-secondary">Submit Complaint</a>
+        <a href="{{ url_for('apply_for_room') }}" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Apply for Room</a>
+        <a href="{{ url_for('view_rooms') }}" class="btn btn-secondary"><i class="fas fa-search"></i> View Available Rooms</a>
+        <a href="{{ url_for('complaints') }}" class="btn btn-secondary"><i class="fas fa-comment-dots"></i> Submit Complaint</a>
 </div>
 {% endblock %}
 

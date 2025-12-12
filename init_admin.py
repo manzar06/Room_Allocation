@@ -29,7 +29,7 @@ def create_admin():
         print("Admin user created successfully!")
         print("Username: admin")
         print("Password: admin123")
-        print("\n⚠️  Please change the password after first login!")
+        print("\nPlease change the password after first login!")
 
 if __name__ == '__main__':
     create_admin()

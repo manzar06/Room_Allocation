@@ -11,6 +11,25 @@ body {
     background-color: #f4f4f4;
 }
 
+/* Icon styling */
+i.fas, i.far {
+    margin-right: 8px;
+}
+
+.nav-menu a i {
+    margin-right: 5px;
+}
+
+.btn i {
+    margin-right: 5px;
+}
+
+.feature-card li i {
+    margin-right: 8px;
+    color: #667eea;
+    width: 20px;
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -146,10 +165,8 @@ body {
     border-bottom: 1px solid #eee;
 }
 
-.feature-card li:before {
-    content: "✓ ";
-    color: #28a745;
-    font-weight: bold;
+.feature-card li {
+    padding-left: 5px;
 }
 
 /* Buttons */

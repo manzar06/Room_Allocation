@@ -3,7 +3,7 @@
 {% block title %}Manage Applications - Smart Hostel System{% endblock %}
 
 {% block content %}
-<h2>Manage Applications</h2>
+<h2><i class="fas fa-file-alt"></i> Manage Applications</h2>
 <div class="table-container">
     <table class="data-table">
         <thead>
@@ -28,9 +28,9 @@
                 <td><span class="status-{{ app.status }}">{{ app.status|title }}</span></td>
                 <td>
                     {% if app.status == 'pending' %}
-                    <button onclick="autoAllocate({{ app.id }})" class="btn btn-sm btn-primary">Auto Allocate</button>
-                    <button onclick="openApproveModal({{ app.id }})" class="btn btn-sm btn-success">Manual Approve</button>
-                    <button onclick="openRejectModal({{ app.id }})" class="btn btn-sm btn-danger">Reject</button>
+                    <button onclick="autoAllocate({{ app.id }})" class="btn btn-sm btn-primary"><i class="fas fa-robot"></i> Auto Allocate</button>
+                    <button onclick="openApproveModal({{ app.id }})" class="btn btn-sm btn-success"><i class="fas fa-check"></i> Manual Approve</button>
+                    <button onclick="openRejectModal({{ app.id }})" class="btn btn-sm btn-danger"><i class="fas fa-times"></i> Reject</button>
                     {% else %}
                     <span>{{ app.admin_notes or 'N/A' }}</span>
                     {% endif %}

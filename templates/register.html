@@ -5,7 +5,7 @@
 {% block content %}
 <div class="auth-container">
     <div class="auth-card">
-        <h2>Register</h2>
+        <h2><i class="fas fa-user-plus"></i> Register</h2>
         <form method="POST" action="{{ url_for('register') }}">
             <div class="form-group">
                 <label for="full_name">Full Name</label>
@@ -40,7 +40,7 @@
                 <input type="password" id="password" name="password" required>
             </div>
             <input type="hidden" name="role" value="student">
-            <button type="submit" class="btn btn-primary btn-block">Register</button>
+            <button type="submit" class="btn btn-primary btn-block"><i class="fas fa-user-plus"></i> Register</button>
         </form>
         <p class="auth-link">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
     </div>

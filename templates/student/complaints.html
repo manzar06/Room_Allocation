@@ -3,7 +3,7 @@
 {% block title %}Complaints - Smart Hostel System{% endblock %}
 
 {% block content %}
-<h2>Submit a Complaint</h2>
+<h2><i class="fas fa-comment-dots"></i> Submit a Complaint</h2>
 <div class="form-container">
     <form method="POST" action="{{ url_for('complaints') }}">
         <div class="form-group">
@@ -25,11 +25,11 @@
             <label for="description">Description</label>
             <textarea id="description" name="description" rows="5" required></textarea>
         </div>
-        <button type="submit" class="btn btn-primary">Submit Complaint</button>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit Complaint</button>
     </form>
 </div>
 
-<h2>My Complaints</h2>
+<h2><i class="fas fa-list"></i> My Complaints</h2>
 <div class="complaints-list">
     {% for complaint in complaints %}
     <div class="complaint-card">

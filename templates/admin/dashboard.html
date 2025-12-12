@@ -7,23 +7,23 @@
 
 <div class="stats-grid">
     <div class="stat-card">
-        <h3>Total Students</h3>
+        <h3><i class="fas fa-users"></i> Total Students</h3>
         <p class="stat-number">{{ total_students }}</p>
     </div>
     <div class="stat-card">
-        <h3>Total Rooms</h3>
+        <h3><i class="fas fa-door-open"></i> Total Rooms</h3>
         <p class="stat-number">{{ total_rooms }}</p>
     </div>
     <div class="stat-card">
-        <h3>Available Rooms</h3>
+        <h3><i class="fas fa-check-circle"></i> Available Rooms</h3>
         <p class="stat-number">{{ available_rooms }}</p>
     </div>
     <div class="stat-card">
-        <h3>Pending Applications</h3>
+        <h3><i class="fas fa-file-alt"></i> Pending Applications</h3>
         <p class="stat-number">{{ pending_applications }}</p>
     </div>
     <div class="stat-card">
-        <h3>Open Complaints</h3>
+        <h3><i class="fas fa-exclamation-circle"></i> Open Complaints</h3>
         <p class="stat-number">{{ open_complaints }}</p>
     </div>
 </div>
@@ -55,9 +55,9 @@
 </div>
 
 <div class="quick-actions">
-    <a href="{{ url_for('manage_applications') }}" class="btn btn-primary">Manage Applications</a>
-    <a href="{{ url_for('manage_rooms') }}" class="btn btn-secondary">Manage Rooms</a>
-    <a href="{{ url_for('admin_complaints') }}" class="btn btn-secondary">View Complaints</a>
+    <a href="{{ url_for('manage_applications') }}" class="btn btn-primary"><i class="fas fa-file-alt"></i> Manage Applications</a>
+    <a href="{{ url_for('manage_rooms') }}" class="btn btn-secondary"><i class="fas fa-door-open"></i> Manage Rooms</a>
+    <a href="{{ url_for('admin_complaints') }}" class="btn btn-secondary"><i class="fas fa-exclamation-circle"></i> View Complaints</a>
 </div>
 {% endblock %}
 

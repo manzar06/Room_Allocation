@@ -3,10 +3,10 @@
 {% block title %}Room Allocations - Smart Hostel System{% endblock %}
 
 {% block content %}
-<h2>Room Allocations</h2>
+<h2><i class="fas fa-key"></i> Room Allocations</h2>
 
 <div class="export-buttons" style="margin-bottom: 20px;">
-    <a href="{{ url_for('export_allocations_csv') }}" class="btn btn-primary">Export to CSV</a>
+    <a href="{{ url_for('export_allocations_csv') }}" class="btn btn-primary"><i class="fas fa-file-csv"></i> Export to CSV</a>
 </div>
 
 <div class="filter-buttons" style="margin-bottom: 20px;">
@@ -44,9 +44,9 @@
                 <td>
                     {% if allocation.status == 'active' %}
                         {% if not allocation.check_in_date %}
-                        <button onclick="openCheckInModal({{ allocation.id }})" class="btn btn-sm btn-success">Check In</button>
+                        <button onclick="openCheckInModal({{ allocation.id }})" class="btn btn-sm btn-success"><i class="fas fa-sign-in-alt"></i> Check In</button>
                         {% endif %}
-                        <button onclick="openCheckOutModal({{ allocation.id }})" class="btn btn-sm btn-danger">Check Out</button>
+                        <button onclick="openCheckOutModal({{ allocation.id }})" class="btn btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> Check Out</button>
                     {% else %}
                         <span>Completed</span>
                     {% endif %}
