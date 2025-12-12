@@ -892,5 +892,51 @@ def mark_fee_paid(fee_id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        
+        # Initialize default blocks - check each one individually
+        default_blocks = [
+            {'name': 'Block A', 'gender': 'male', 'description': 'Boys Hostel Block A'},
+            {'name': 'Block B', 'gender': 'female', 'description': 'Girls Hostel Block B'},
+            {'name': 'Block C', 'gender': 'male', 'description': 'Boys Hostel Block C'},
+            {'name': 'Block D', 'gender': 'female', 'description': 'Girls Hostel Block D'},
+        ]
+        
+        created_blocks = []
+        for block_data in default_blocks:
+            existing_block = Block.query.filter_by(name=block_data['name']).first()
+            if not existing_block:
+                block = Block(**block_data)
+                db.session.add(block)
+                created_blocks.append(block_data['name'])
+        
+        if created_blocks:
+            db.session.commit()
+            print(f"Initialized default blocks: {', '.join(created_blocks)}")
+        
+        # Initialize empty rooms for blocks that don't have any rooms
+        blocks = Block.query.all()
+        rooms_created = False
+        for block in blocks:
+            existing_rooms = Room.query.filter_by(block_id=block.id).count()
+            if existing_rooms == 0:
+                # Add a few empty rooms on floor 1 for this block
+                for room_num in ['101', '102', '103', '104', '105']:
+                    room = Room(
+                        block_id=block.id,
+                        floor=1,
+                        room_number=room_num,
+                        capacity=2,
+                        room_type='AC' if int(room_num[-1]) % 2 == 1 else 'Non-AC',
+                        price=5000 if int(room_num[-1]) % 2 == 1 else 3500,
+                        current_occupancy=0,
+                        status='available'
+                    )
+                    db.session.add(room)
+                rooms_created = True
+        
+        if rooms_created:
+            db.session.commit()
+            print("Initialized sample empty rooms for blocks that didn't have any")
+    
     app.run(debug=True)
 

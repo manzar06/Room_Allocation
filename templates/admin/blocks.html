@@ -27,14 +27,23 @@
 </div>
 
 <h3><i class="fas fa-list"></i> Existing Blocks</h3>
+{% if blocks %}
 <div class="blocks-grid">
     {% for block in blocks %}
     <div class="block-card">
         <h4>{{ block.name }}</h4>
         <p><strong>Gender:</strong> {{ block.gender|title }}</p>
         <p>{{ block.description or 'No description' }}</p>
+        {% set room_count = block.rooms|length %}
+        <p><strong>Rooms:</strong> {{ room_count }}</p>
     </div>
     {% endfor %}
 </div>
+{% else %}
+<div class="alert alert-info">
+    <p>No blocks found. Blocks will be automatically created when you start the application.</p>
+    <p>If you just started the app, please refresh this page.</p>
+</div>
+{% endif %}
 {% endblock %}
 
