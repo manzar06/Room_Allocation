@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>Admin Dashboard</h2>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Students</h3>
+        <p class="stat-number">{{ total_students }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Rooms</h3>
+        <p class="stat-number">{{ total_rooms }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Available Rooms</h3>
+        <p class="stat-number">{{ available_rooms }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Pending Applications</h3>
+        <p class="stat-number">{{ pending_applications }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Open Complaints</h3>
+        <p class="stat-number">{{ open_complaints }}</p>
+    </div>
+</div>
+
+<h3>Recent Applications</h3>
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Applied Date</th>
+                <th>Preferred Block</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in recent_applications %}
+            <tr>
+                <td>{{ app.student.full_name }}</td>
+                <td>{{ app.applied_at.strftime('%Y-%m-%d') }}</td>
+                <td>{{ app.preferred_block or 'Any' }}</td>
+                <td><span class="status-{{ app.status }}">{{ app.status|title }}</span></td>
+                <td><a href="{{ url_for('manage_applications') }}">View</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="quick-actions">
+    <a href="{{ url_for('manage_applications') }}" class="btn btn-primary">Manage Applications</a>
+    <a href="{{ url_for('manage_rooms') }}" class="btn btn-secondary">Manage Rooms</a>
+    <a href="{{ url_for('admin_complaints') }}" class="btn btn-secondary">View Complaints</a>
+</div>
+{% endblock %}
+

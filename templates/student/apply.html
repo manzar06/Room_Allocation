@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Apply for Room - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>Apply for Hostel Room</h2>
+<div class="form-container">
+    <form method="POST" action="{{ url_for('apply_for_room') }}">
+        <div class="form-group">
+            <label for="preferred_block">Preferred Block</label>
+            <select id="preferred_block" name="preferred_block">
+                <option value="">Any</option>
+                {% for block in blocks %}
+                <option value="{{ block.name }}">{{ block.name }} ({{ block.gender }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="preferred_room_type">Preferred Room Type</label>
+            <select id="preferred_room_type" name="preferred_room_type">
+                <option value="">Any</option>
+                <option value="AC">AC</option>
+                <option value="Non-AC">Non-AC</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="reason">Reason/Additional Notes</label>
+            <textarea id="reason" name="reason" rows="4" placeholder="Any special requirements or reasons..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Application</button>
+        <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
+

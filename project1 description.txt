@@ -1,0 +1,65 @@
+Smart Hostel Room Allocation System – Full Project Description
+
+✅ Project Overview
+
+The Smart Hostel Room Allocation System is a web-based platform that automates the entire hostel management process. It replaces manual allocation using registers and spreadsheets with a digital solution where students can apply for rooms, administrators can assign rooms, track occupancy, handle complaints, and manage fees.
+
+This system improves transparency, reduces administrative workload, and ensures efficient hostel operations.
+
+
+---
+
+🎯 Objectives
+
+Automate hostel room allocation.
+
+Maintain a digital record of students, rooms, and availability.
+
+Provide a portal for students to apply, check status, and raise complaints.
+
+Enable admin to assign rooms based on availability, preferences, and eligibility.
+
+Manage hostel fees and generate receipts.
+
+Improve overall hostel communication and monitoring.
+
+
+
+---
+
+🔧 Proposed System Features
+
+1. Student Module
+
+User registration & login.
+
+Apply for hostel room.
+
+View available rooms and occupancy status.
+
+Receive room confirmation through dashboard.
+
+Pay hostel fees online (optional add-on).
+
+Lodge complaints (electricity, water, cleaning, etc.).
+
+Track status of submitted complaints.
+
+
+2. Admin Module
+
+Admin login.
+
+Manage hostel blocks, floors, and rooms.
+
+View real-time room availability.
+
+Auto or manual room allocation.
+
+Approve/reject student applications.
+
+Manage student check-in & check-out.
+
+Maintain fee records & generate reports.
+
+Assign staff to handle complaints.

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Fees - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>My Fee Records</h2>
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Fee Type</th>
+                <th>Amount</th>
+                <th>Due Date</th>
+                <th>Paid Date</th>
+                <th>Status</th>
+                <th>Receipt</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fee in fees %}
+            <tr>
+                <td>{{ fee.fee_type|title }}</td>
+                <td>₹{{ fee.amount }}</td>
+                <td>{{ fee.due_date.strftime('%Y-%m-%d') }}</td>
+                <td>{{ fee.paid_date.strftime('%Y-%m-%d') if fee.paid_date else 'N/A' }}</td>
+                <td><span class="status-{{ fee.status }}">{{ fee.status|title }}</span></td>
+                <td>{{ fee.receipt_number or 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

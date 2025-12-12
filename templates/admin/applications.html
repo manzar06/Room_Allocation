@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Applications - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>Manage Applications</h2>
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Student ID</th>
+                <th>Applied Date</th>
+                <th>Preferred Block</th>
+                <th>Preferred Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.student.full_name }}</td>
+                <td>{{ app.student.student_id }}</td>
+                <td>{{ app.applied_at.strftime('%Y-%m-%d') }}</td>
+                <td>{{ app.preferred_block or 'Any' }}</td>
+                <td>{{ app.preferred_room_type or 'Any' }}</td>
+                <td><span class="status-{{ app.status }}">{{ app.status|title }}</span></td>
+                <td>
+                    {% if app.status == 'pending' %}
+                    <button onclick="openApproveModal({{ app.id }})" class="btn btn-sm btn-success">Approve</button>
+                    <button onclick="openRejectModal({{ app.id }})" class="btn btn-sm btn-danger">Reject</button>
+                    {% else %}
+                    <span>{{ app.admin_notes or 'N/A' }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Approve Modal -->
+<div id="approveModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('approveModal')">&times;</span>
+        <h3>Approve Application</h3>
+        <form method="POST" id="approveForm">
+            <div class="form-group">
+                <label for="room_id">Select Room</label>
+                <select id="room_id" name="room_id" required>
+                    <option value="">Select a room</option>
+                    {% if available_rooms %}
+                        {% for room in available_rooms %}
+                        <option value="{{ room.id }}">{{ room.block.name }} - Floor {{ room.floor }} - Room {{ room.room_number }} ({{ room.current_occupancy }}/{{ room.capacity }})</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="">No available rooms</option>
+                    {% endif %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Approve & Allocate</button>
+        </form>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('rejectModal')">&times;</span>
+        <h3>Reject Application</h3>
+        <form method="POST" id="rejectForm">
+            <div class="form-group">
+                <label for="reject_notes">Reason for Rejection</label>
+                <textarea id="reject_notes" name="notes" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger">Reject</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openApproveModal(appId) {
+    document.getElementById('approveForm').action = '/admin/application/' + appId + '/approve';
+    document.getElementById('approveModal').style.display = 'block';
+}
+
+function openRejectModal(appId) {
+    document.getElementById('rejectForm').action = '/admin/application/' + appId + '/reject';
+    document.getElementById('rejectModal').style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
+

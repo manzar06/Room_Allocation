@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>Reports & Statistics</h2>
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Students</h3>
+        <p class="stat-number">{{ total_students }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Rooms</h3>
+        <p class="stat-number">{{ total_rooms }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Occupied Rooms</h3>
+        <p class="stat-number">{{ occupied_rooms }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Available Rooms</h3>
+        <p class="stat-number">{{ available_rooms }}</p>
+    </div>
+</div>
+{% endblock %}
+

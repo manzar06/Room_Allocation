@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Complaints - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>Submit a Complaint</h2>
+<div class="form-container">
+    <form method="POST" action="{{ url_for('complaints') }}">
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" required>
+                <option value="">Select category</option>
+                <option value="electricity">Electricity</option>
+                <option value="water">Water</option>
+                <option value="cleaning">Cleaning</option>
+                <option value="maintenance">Maintenance</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Complaint</button>
+    </form>
+</div>
+
+<h2>My Complaints</h2>
+<div class="complaints-list">
+    {% for complaint in complaints %}
+    <div class="complaint-card">
+        <h3>{{ complaint.title }}</h3>
+        <p><strong>Category:</strong> {{ complaint.category|title }}</p>
+        <p><strong>Status:</strong> <span class="status-{{ complaint.status }}">{{ complaint.status|title }}</span></p>
+        <p><strong>Submitted:</strong> {{ complaint.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p>{{ complaint.description }}</p>
+        {% if complaint.admin_response %}
+        <div class="admin-response">
+            <strong>Admin Response:</strong> {{ complaint.admin_response }}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

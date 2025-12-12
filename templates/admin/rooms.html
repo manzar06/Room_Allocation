@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Rooms - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>Manage Rooms</h2>
+<div class="form-container">
+    <h3>Add New Room</h3>
+    <form method="POST" action="{{ url_for('manage_rooms') }}">
+        <div class="form-group">
+            <label for="block_id">Block</label>
+            <select id="block_id" name="block_id" required>
+                {% for block in blocks %}
+                <option value="{{ block.id }}">{{ block.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="floor">Floor</label>
+            <input type="number" id="floor" name="floor" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="room_number">Room Number</label>
+            <input type="text" id="room_number" name="room_number" required>
+        </div>
+        <div class="form-group">
+            <label for="capacity">Capacity</label>
+            <input type="number" id="capacity" name="capacity" min="1" value="2" required>
+        </div>
+        <div class="form-group">
+            <label for="room_type">Room Type</label>
+            <select id="room_type" name="room_type">
+                <option value="">Select type</option>
+                <option value="AC">AC</option>
+                <option value="Non-AC">Non-AC</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="price">Price (per month)</label>
+            <input type="number" id="price" name="price" step="0.01" min="0">
+        </div>
+        <button type="submit" class="btn btn-primary">Add Room</button>
+    </form>
+</div>
+
+<h3>All Rooms</h3>
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Block</th>
+                <th>Floor</th>
+                <th>Room Number</th>
+                <th>Type</th>
+                <th>Capacity</th>
+                <th>Occupancy</th>
+                <th>Status</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for room in rooms %}
+            <tr>
+                <td>{{ room.block.name }}</td>
+                <td>{{ room.floor }}</td>
+                <td>{{ room.room_number }}</td>
+                <td>{{ room.room_type or 'N/A' }}</td>
+                <td>{{ room.capacity }}</td>
+                <td>{{ room.current_occupancy }}/{{ room.capacity }}</td>
+                <td><span class="status-{{ room.status }}">{{ room.status|title }}</span></td>
+                <td>₹{{ room.price or 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+

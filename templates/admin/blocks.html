@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Blocks - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>Manage Blocks</h2>
+<div class="form-container">
+    <h3>Add New Block</h3>
+    <form method="POST" action="{{ url_for('manage_blocks') }}">
+        <div class="form-group">
+            <label for="name">Block Name</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" required>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Block</button>
+    </form>
+</div>
+
+<h3>Existing Blocks</h3>
+<div class="blocks-grid">
+    {% for block in blocks %}
+    <div class="block-card">
+        <h4>{{ block.name }}</h4>
+        <p><strong>Gender:</strong> {{ block.gender|title }}</p>
+        <p>{{ block.description or 'No description' }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

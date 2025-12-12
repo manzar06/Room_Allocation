@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Available Rooms - Smart Hostel System{% endblock %}
+
+{% block content %}
+<h2>Available Rooms</h2>
+{% for room_group in rooms_data %}
+<div class="block-section">
+    <h3>{{ room_group.block.name }} ({{ room_group.block.gender }})</h3>
+    <div class="rooms-grid">
+        {% for room in room_group.rooms %}
+        <div class="room-card">
+            <h4>Floor {{ room.floor }} - Room {{ room.room_number }}</h4>
+            <p><strong>Type:</strong> {{ room.room_type or 'N/A' }}</p>
+            <p><strong>Capacity:</strong> {{ room.capacity }}</p>
+            <p><strong>Occupancy:</strong> {{ room.current_occupancy }}/{{ room.capacity }}</p>
+            <p><strong>Status:</strong> <span class="status-{{ room.status }}">{{ room.status|title }}</span></p>
+            {% if room.price %}
+            <p><strong>Price:</strong> ₹{{ room.price }}/month</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
