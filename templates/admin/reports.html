@@ -4,6 +4,16 @@
 
 {% block content %}
 <h2>Reports & Statistics</h2>
+
+<div class="export-buttons" style="margin-bottom: 20px;">
+    <a href="{{ url_for('export_summary_csv') }}" class="btn btn-primary">Export Summary CSV</a>
+    <a href="{{ url_for('export_students_csv') }}" class="btn btn-secondary">Export Students CSV</a>
+    <a href="{{ url_for('export_fees_csv') }}" class="btn btn-secondary">Export Fees CSV</a>
+    <a href="{{ url_for('export_allocations_csv') }}" class="btn btn-secondary">Export Allocations CSV</a>
+    <a href="{{ url_for('export_rooms_csv') }}" class="btn btn-secondary">Export Rooms CSV</a>
+</div>
+
+<h3>Room & Student Statistics</h3>
 <div class="stats-grid">
     <div class="stat-card">
         <h3>Total Students</h3>
@@ -20,6 +30,46 @@
     <div class="stat-card">
         <h3>Available Rooms</h3>
         <p class="stat-number">{{ available_rooms }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Active Allocations</h3>
+        <p class="stat-number">{{ active_allocations }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Checked Out</h3>
+        <p class="stat-number">{{ checked_out }}</p>
+    </div>
+</div>
+
+<h3>Fee Statistics</h3>
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>Total Fees</h3>
+        <p class="stat-number">{{ total_fees }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Paid Fees</h3>
+        <p class="stat-number">{{ paid_fees }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Pending Fees</h3>
+        <p class="stat-number">{{ pending_fees }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Overdue Fees</h3>
+        <p class="stat-number">{{ overdue_fees }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Collected</h3>
+        <p class="stat-number" style="font-size: 1.5rem;">Rs{{ "%.2f"|format(total_collected) }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Pending</h3>
+        <p class="stat-number" style="font-size: 1.5rem;">Rs{{ "%.2f"|format(total_pending) }}</p>
+    </div>
+    <div class="stat-card">
+        <h3>Total Overdue</h3>
+        <p class="stat-number" style="font-size: 1.5rem;">Rs{{ "%.2f"|format(total_overdue) }}</p>
     </div>
 </div>
 {% endblock %}

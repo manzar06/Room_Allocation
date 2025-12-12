@@ -28,7 +28,8 @@
                 <td><span class="status-{{ app.status }}">{{ app.status|title }}</span></td>
                 <td>
                     {% if app.status == 'pending' %}
-                    <button onclick="openApproveModal({{ app.id }})" class="btn btn-sm btn-success">Approve</button>
+                    <button onclick="autoAllocate({{ app.id }})" class="btn btn-sm btn-primary">Auto Allocate</button>
+                    <button onclick="openApproveModal({{ app.id }})" class="btn btn-sm btn-success">Manual Approve</button>
                     <button onclick="openRejectModal({{ app.id }})" class="btn btn-sm btn-danger">Reject</button>
                     {% else %}
                     <span>{{ app.admin_notes or 'N/A' }}</span>
@@ -92,6 +93,16 @@ function openApproveModal(appId) {
 function openRejectModal(appId) {
     document.getElementById('rejectForm').action = '/admin/application/' + appId + '/reject';
     document.getElementById('rejectModal').style.display = 'block';
+}
+
+function autoAllocate(appId) {
+    if (confirm('This will automatically assign a room based on student preferences. Continue?')) {
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/application/' + appId + '/auto_allocate';
+        document.body.appendChild(form);
+        form.submit();
+    }
 }
 
 function closeModal(modalId) {

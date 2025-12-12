@@ -17,6 +17,7 @@
                     {% if current_user.role == 'admin' %}
                         <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
                         <li><a href="{{ url_for('manage_applications') }}">Applications</a></li>
+                        <li><a href="{{ url_for('view_allocations') }}">Allocations</a></li>
                         <li><a href="{{ url_for('manage_blocks') }}">Blocks</a></li>
                         <li><a href="{{ url_for('manage_rooms') }}">Rooms</a></li>
                         <li><a href="{{ url_for('manage_fees') }}">Fees</a></li>

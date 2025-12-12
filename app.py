@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
+import csv
+import io
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
@@ -75,6 +77,7 @@ class Allocation(db.Model):
     allocated_at = db.Column(db.DateTime, default=datetime.utcnow)
     check_in_date = db.Column(db.DateTime, nullable=True)
     check_out_date = db.Column(db.DateTime, nullable=True)
+    checkout_reason = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default='active')  # 'active', 'checked_out'
 
 class Complaint(db.Model):
@@ -420,6 +423,77 @@ def approve_application(app_id):
     flash('Application approved and room allocated! Hostel fee generated.', 'success')
     return redirect(url_for('manage_applications'))
 
+@app.route('/admin/application/<int:app_id>/auto_allocate', methods=['POST'])
+@login_required
+def auto_allocate_application(app_id):
+    if current_user.role != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    application = Application.query.get_or_404(app_id)
+    
+    # Prevent duplicate allocation
+    existing_allocation = Allocation.query.filter_by(student_id=application.student_id, status='active').first()
+    if existing_allocation:
+        flash('Student already has an active allocation', 'error')
+        return redirect(url_for('manage_applications'))
+    
+    student = application.student
+    
+    # Build query for available rooms
+    query = Room.query.join(Block).filter(
+        Room.current_occupancy < Room.capacity
+    )
+    
+    # Filter by gender (required)
+    if student.gender:
+        query = query.filter(Block.gender == student.gender)
+    
+    # Filter by preferred block if specified
+    if application.preferred_block:
+        query = query.filter(Block.name == application.preferred_block)
+    
+    # Filter by preferred room type if specified
+    if application.preferred_room_type:
+        query = query.filter(Room.room_type == application.preferred_room_type)
+    
+    # Order by: prefer rooms with lower occupancy, then by room number
+    room = query.order_by(Room.current_occupancy.asc(), Room.room_number.asc()).first()
+    
+    if not room:
+        flash('No available room matching student preferences. Please assign manually.', 'error')
+        return redirect(url_for('manage_applications'))
+    
+    # Create allocation
+    allocation = Allocation(
+        student_id=application.student_id,
+        room_id=room.id,
+        check_in_date=datetime.utcnow()
+    )
+    db.session.add(allocation)
+    
+    # Update room occupancy
+    room.current_occupancy += 1
+    if room.current_occupancy >= room.capacity:
+        room.status = 'occupied'
+    
+    # Update application
+    application.status = 'approved'
+    application.reviewed_at = datetime.utcnow()
+    application.admin_notes = f'Auto-allocated to {room.block.name} - Floor {room.floor} - Room {room.room_number}'
+    
+    # Auto-generate hostel fee
+    fee = Fee(
+        student_id=application.student_id,
+        amount=room.price if room.price else 5000,
+        fee_type='hostel_fee',
+        due_date=datetime.utcnow() + timedelta(days=30)
+    )
+    db.session.add(fee)
+    
+    db.session.commit()
+    flash(f'Auto-allocated to {room.block.name} - Floor {room.floor} - Room {room.room_number}!', 'success')
+    return redirect(url_for('manage_applications'))
+
 @app.route('/admin/application/<int:app_id>/reject', methods=['POST'])
 @login_required
 def reject_application(app_id):
@@ -471,8 +545,68 @@ def view_allocations():
         flash('Access denied', 'error')
         return redirect(url_for('index'))
     
-    allocations = Allocation.query.filter_by(status='active').all()
-    return render_template('admin/allocations.html', allocations=allocations)
+    status_filter = request.args.get('status', 'all')
+    if status_filter == 'active':
+        allocations = Allocation.query.filter_by(status='active').all()
+    elif status_filter == 'checked_out':
+        allocations = Allocation.query.filter_by(status='checked_out').all()
+    else:
+        allocations = Allocation.query.all()
+    
+    return render_template('admin/allocations.html', allocations=allocations, status_filter=status_filter)
+
+@app.route('/admin/allocation/<int:alloc_id>/check_in', methods=['POST'])
+@login_required
+def process_check_in(alloc_id):
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    allocation = Allocation.query.get_or_404(alloc_id)
+    check_in_date_str = request.form.get('check_in_date')
+    
+    if check_in_date_str:
+        allocation.check_in_date = datetime.strptime(check_in_date_str, '%Y-%m-%d')
+    else:
+        allocation.check_in_date = datetime.utcnow()
+    
+    db.session.commit()
+    flash('Check-in processed successfully!', 'success')
+    return redirect(url_for('view_allocations'))
+
+@app.route('/admin/allocation/<int:alloc_id>/check_out', methods=['POST'])
+@login_required
+def process_check_out(alloc_id):
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    allocation = Allocation.query.get_or_404(alloc_id)
+    check_out_date_str = request.form.get('check_out_date')
+    checkout_reason = request.form.get('checkout_reason', '')
+    checkout_reason_other = request.form.get('checkout_reason_other', '')
+    
+    if check_out_date_str:
+        allocation.check_out_date = datetime.strptime(check_out_date_str, '%Y-%m-%d')
+    else:
+        allocation.check_out_date = datetime.utcnow()
+    
+    allocation.status = 'checked_out'
+    # Combine reason with other notes if provided
+    if checkout_reason == 'Other' and checkout_reason_other:
+        allocation.checkout_reason = f"Other: {checkout_reason_other}"
+    else:
+        allocation.checkout_reason = checkout_reason
+    
+    # Free up the room
+    room = allocation.room
+    room.current_occupancy = max(room.current_occupancy - 1, 0)
+    if room.current_occupancy < room.capacity:
+        room.status = 'available'
+    
+    db.session.commit()
+    flash('Check-out processed successfully! Room is now available.', 'success')
+    return redirect(url_for('view_allocations'))
 
 @app.route('/admin/reports')
 @login_required
@@ -481,16 +615,232 @@ def reports():
         flash('Access denied', 'error')
         return redirect(url_for('index'))
     
+    # Room statistics
     total_students = User.query.filter_by(role='student').count()
     total_rooms = Room.query.count()
     occupied_rooms = Room.query.filter(Room.current_occupancy > 0).count()
     available_rooms = Room.query.filter_by(status='available').count()
     
+    # Fee statistics
+    total_fees = Fee.query.count()
+    paid_fees = Fee.query.filter_by(status='paid').count()
+    pending_fees = Fee.query.filter_by(status='pending').count()
+    total_collected = db.session.query(db.func.sum(Fee.amount)).filter_by(status='paid').scalar() or 0
+    total_pending = db.session.query(db.func.sum(Fee.amount)).filter_by(status='pending').scalar() or 0
+    
+    # Overdue fees (due date passed but not paid)
+    from datetime import datetime
+    overdue_fees = Fee.query.filter(
+        Fee.status == 'pending',
+        Fee.due_date < datetime.utcnow()
+    ).count()
+    total_overdue = db.session.query(db.func.sum(Fee.amount)).filter(
+        Fee.status == 'pending',
+        Fee.due_date < datetime.utcnow()
+    ).scalar() or 0
+    
+    # Allocation statistics
+    active_allocations = Allocation.query.filter_by(status='active').count()
+    checked_out = Allocation.query.filter_by(status='checked_out').count()
+    
     return render_template('admin/reports.html',
                          total_students=total_students,
                          total_rooms=total_rooms,
                          occupied_rooms=occupied_rooms,
-                         available_rooms=available_rooms)
+                         available_rooms=available_rooms,
+                         total_fees=total_fees,
+                         paid_fees=paid_fees,
+                         pending_fees=pending_fees,
+                         total_collected=total_collected,
+                         total_pending=total_pending,
+                         overdue_fees=overdue_fees,
+                         total_overdue=total_overdue,
+                         active_allocations=active_allocations,
+                         checked_out=checked_out)
+
+@app.route('/admin/reports/export/students')
+@login_required
+def export_students_csv():
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow(['Student ID', 'Full Name', 'Username', 'Email', 'Gender', 'Phone', 'Registration Date'])
+    
+    # Data
+    students = User.query.filter_by(role='student').all()
+    for student in students:
+        writer.writerow([
+            student.student_id or '',
+            student.full_name,
+            student.username,
+            student.email,
+            student.gender or '',
+            student.phone or '',
+            student.created_at.strftime('%Y-%m-%d') if student.created_at else ''
+        ])
+    
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=students_report.csv'}
+    )
+
+@app.route('/admin/reports/export/fees')
+@login_required
+def export_fees_csv():
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow(['Student Name', 'Student ID', 'Fee Type', 'Amount', 'Due Date', 'Paid Date', 'Status', 'Receipt Number', 'Payment Method'])
+    
+    # Data
+    fees = Fee.query.join(User).order_by(Fee.due_date.desc()).all()
+    for fee in fees:
+        writer.writerow([
+            fee.student.full_name,
+            fee.student.student_id or '',
+            fee.fee_type,
+            fee.amount,
+            fee.due_date.strftime('%Y-%m-%d') if fee.due_date else '',
+            fee.paid_date.strftime('%Y-%m-%d') if fee.paid_date else '',
+            fee.status,
+            fee.receipt_number or '',
+            fee.payment_method or ''
+        ])
+    
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=fees_report.csv'}
+    )
+
+@app.route('/admin/reports/export/allocations')
+@login_required
+def export_allocations_csv():
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow(['Student Name', 'Student ID', 'Block', 'Floor', 'Room Number', 'Room Type', 'Allocated Date', 'Check-in Date', 'Check-out Date', 'Status', 'Check-out Reason'])
+    
+    # Data
+    allocations = Allocation.query.join(User).join(Room).join(Block).order_by(Allocation.allocated_at.desc()).all()
+    for alloc in allocations:
+        writer.writerow([
+            alloc.student.full_name,
+            alloc.student.student_id or '',
+            alloc.room.block.name,
+            alloc.room.floor,
+            alloc.room.room_number,
+            alloc.room.room_type or '',
+            alloc.allocated_at.strftime('%Y-%m-%d') if alloc.allocated_at else '',
+            alloc.check_in_date.strftime('%Y-%m-%d') if alloc.check_in_date else '',
+            alloc.check_out_date.strftime('%Y-%m-%d') if alloc.check_out_date else '',
+            alloc.status,
+            alloc.checkout_reason or ''
+        ])
+    
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=allocations_report.csv'}
+    )
+
+@app.route('/admin/reports/export/rooms')
+@login_required
+def export_rooms_csv():
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    writer.writerow(['Block', 'Gender', 'Floor', 'Room Number', 'Room Type', 'Capacity', 'Current Occupancy', 'Status', 'Price'])
+    
+    # Data
+    rooms = Room.query.join(Block).order_by(Block.name, Room.floor, Room.room_number).all()
+    for room in rooms:
+        writer.writerow([
+            room.block.name,
+            room.block.gender,
+            room.floor,
+            room.room_number,
+            room.room_type or '',
+            room.capacity,
+            room.current_occupancy,
+            room.status,
+            room.price or ''
+        ])
+    
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=rooms_report.csv'}
+    )
+
+@app.route('/admin/reports/export/summary')
+@login_required
+def export_summary_csv():
+    if current_user.role != 'admin':
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Summary statistics
+    total_students = User.query.filter_by(role='student').count()
+    total_rooms = Room.query.count()
+    occupied_rooms = Room.query.filter(Room.current_occupancy > 0).count()
+    available_rooms = Room.query.filter_by(status='available').count()
+    total_fees = Fee.query.count()
+    paid_fees = Fee.query.filter_by(status='paid').count()
+    pending_fees = Fee.query.filter_by(status='pending').count()
+    total_collected = db.session.query(db.func.sum(Fee.amount)).filter_by(status='paid').scalar() or 0
+    total_pending = db.session.query(db.func.sum(Fee.amount)).filter_by(status='pending').scalar() or 0
+    active_allocations = Allocation.query.filter_by(status='active').count()
+    checked_out = Allocation.query.filter_by(status='checked_out').count()
+    
+    writer.writerow(['Report Type', 'Value'])
+    writer.writerow(['Total Students', total_students])
+    writer.writerow(['Total Rooms', total_rooms])
+    writer.writerow(['Occupied Rooms', occupied_rooms])
+    writer.writerow(['Available Rooms', available_rooms])
+    writer.writerow(['Active Allocations', active_allocations])
+    writer.writerow(['Checked Out', checked_out])
+    writer.writerow(['Total Fees', total_fees])
+    writer.writerow(['Paid Fees', paid_fees])
+    writer.writerow(['Pending Fees', pending_fees])
+    writer.writerow(['Total Collected (Rs)', total_collected])
+    writer.writerow(['Total Pending (Rs)', total_pending])
+    writer.writerow(['Report Generated', datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')])
+    
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=summary_report.csv'}
+    )
 
 @app.route('/admin/fees', methods=['GET', 'POST'])
 @login_required

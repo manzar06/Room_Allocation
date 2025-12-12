@@ -4,6 +4,17 @@
 
 {% block content %}
 <h2>Room Allocations</h2>
+
+<div class="export-buttons" style="margin-bottom: 20px;">
+    <a href="{{ url_for('export_allocations_csv') }}" class="btn btn-primary">Export to CSV</a>
+</div>
+
+<div class="filter-buttons" style="margin-bottom: 20px;">
+    <a href="{{ url_for('view_allocations', status='all') }}" class="btn {{ 'btn-primary' if status_filter == 'all' else 'btn-secondary' }}">All</a>
+    <a href="{{ url_for('view_allocations', status='active') }}" class="btn {{ 'btn-primary' if status_filter == 'active' else 'btn-secondary' }}">Active</a>
+    <a href="{{ url_for('view_allocations', status='checked_out') }}" class="btn {{ 'btn-primary' if status_filter == 'checked_out' else 'btn-secondary' }}">Checked Out</a>
+</div>
+
 <div class="table-container">
     <table class="data-table">
         <thead>
@@ -13,7 +24,10 @@
                 <th>Room</th>
                 <th>Allocated Date</th>
                 <th>Check-in Date</th>
+                <th>Check-out Date</th>
+                <th>Check-out Reason</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -23,12 +37,110 @@
                 <td>{{ allocation.student.student_id }}</td>
                 <td>{{ allocation.room.block.name }} - Floor {{ allocation.room.floor }} - Room {{ allocation.room.room_number }}</td>
                 <td>{{ allocation.allocated_at.strftime('%Y-%m-%d') }}</td>
-                <td>{{ allocation.check_in_date.strftime('%Y-%m-%d') if allocation.check_in_date else 'N/A' }}</td>
+                <td>{{ allocation.check_in_date.strftime('%Y-%m-%d') if allocation.check_in_date else 'Not checked in' }}</td>
+                <td>{{ allocation.check_out_date.strftime('%Y-%m-%d') if allocation.check_out_date else 'N/A' }}</td>
+                <td>{{ allocation.checkout_reason or 'N/A' }}</td>
                 <td><span class="status-{{ allocation.status }}">{{ allocation.status|title }}</span></td>
+                <td>
+                    {% if allocation.status == 'active' %}
+                        {% if not allocation.check_in_date %}
+                        <button onclick="openCheckInModal({{ allocation.id }})" class="btn btn-sm btn-success">Check In</button>
+                        {% endif %}
+                        <button onclick="openCheckOutModal({{ allocation.id }})" class="btn btn-sm btn-danger">Check Out</button>
+                    {% else %}
+                        <span>Completed</span>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<!-- Check In Modal -->
+<div id="checkInModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('checkInModal')">&times;</span>
+        <h3>Process Check-In</h3>
+        <form method="POST" id="checkInForm">
+            <div class="form-group">
+                <label for="check_in_date">Check-in Date</label>
+                <input type="date" id="check_in_date" name="check_in_date">
+                <small>Leave empty to use today's date</small>
+            </div>
+            <button type="submit" class="btn btn-primary">Process Check-In</button>
+        </form>
+    </div>
+</div>
+
+<!-- Check Out Modal -->
+<div id="checkOutModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('checkOutModal')">&times;</span>
+        <h3>Process Check-Out</h3>
+        <p><strong>Warning:</strong> This will free up the room and mark the allocation as checked out.</p>
+        <form method="POST" id="checkOutForm">
+            <div class="form-group">
+                <label for="check_out_date">Check-out Date</label>
+                <input type="date" id="check_out_date" name="check_out_date">
+                <small>Leave empty to use today's date</small>
+            </div>
+            <div class="form-group">
+                <label for="checkout_reason">Check-out Reason</label>
+                <select id="checkout_reason" name="checkout_reason" required onchange="toggleOtherReason()">
+                    <option value="">Select reason</option>
+                    <option value="End of semester">End of semester</option>
+                    <option value="Graduation">Graduation</option>
+                    <option value="Transfer">Transfer</option>
+                    <option value="Personal reasons">Personal reasons</option>
+                    <option value="Disciplinary action">Disciplinary action</option>
+                    <option value="Room change">Room change</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group" id="otherReasonGroup" style="display: none;">
+                <label for="checkout_reason_other">Additional Notes</label>
+                <textarea id="checkout_reason_other" name="checkout_reason_other" rows="3" placeholder="Provide details"></textarea>
+            </div>
+            <button type="submit" class="btn btn-danger">Process Check-Out</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCheckInModal(allocId) {
+    document.getElementById('checkInForm').action = '/admin/allocation/' + allocId + '/check_in';
+    document.getElementById('checkInModal').style.display = 'block';
+}
+
+function openCheckOutModal(allocId) {
+    document.getElementById('checkOutForm').action = '/admin/allocation/' + allocId + '/check_out';
+    document.getElementById('checkOutModal').style.display = 'block';
+}
+
+function toggleOtherReason() {
+    const reason = document.getElementById('checkout_reason').value;
+    const otherGroup = document.getElementById('otherReasonGroup');
+    const otherField = document.getElementById('checkout_reason_other');
+    if (reason === 'Other') {
+        otherGroup.style.display = 'block';
+        otherField.required = true;
+    } else {
+        otherGroup.style.display = 'none';
+        otherField.value = '';
+        otherField.required = false;
+    }
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}
 

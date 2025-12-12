@@ -5,6 +5,10 @@
 {% block content %}
 <h2>Manage Fees</h2>
 
+<div class="export-buttons" style="margin-bottom: 20px;">
+    <a href="{{ url_for('export_fees_csv') }}" class="btn btn-primary">Export to CSV</a>
+</div>
+
 <div class="form-container">
     <h3>Create New Fee</h3>
     <form method="POST" action="{{ url_for('manage_fees') }}">
